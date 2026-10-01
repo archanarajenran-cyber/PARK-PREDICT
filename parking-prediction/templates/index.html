@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ParkPredict | Predict your parking before you arrive</title>
+  <meta name="description" content="ParkPredict estimates parking availability using current occupancy and historical patterns, so you know whether a space will be open before you arrive.">
+  <meta name="theme-color" content="#1547E5">
+
+  <!-- Inline favicon (no image file needed) -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%231547E5'/%3E%3Cpath d='M11 24V8h6.5a4.5 4.5 0 0 1 0 9H11' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+
+  <!-- Fonts (optional: the page falls back to system fonts if offline) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600..800&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to main content</a>
+
+  <!-- ============ NAVIGATION ============ -->
+  <header class="site-header" id="site-header">
+    <div class="container nav">
+      <a class="brand" href="#home" aria-label="ParkPredict, back to top">
+        <span class="brand-mark" aria-hidden="true">P</span>
+        <span class="brand-name">ParkPredict</span>
+      </a>
+
+      <button class="nav-toggle" id="nav-toggle" type="button" aria-expanded="false" aria-controls="nav-menu" aria-label="Open menu">
+        <span class="nav-toggle-bars" aria-hidden="true"></span>
+      </button>
+
+      <nav class="nav-menu" id="nav-menu" aria-label="Main navigation">
+        <ul>
+          <li><a class="nav-link" href="#home">Home</a></li>
+          <li><a class="nav-link" href="#find-parking">Find Parking</a></li>
+          <li><a class="nav-link" href="#parking-location-screen">Parking Locations</a></li>
+          <li><a class="nav-link" href="#how-it-works">How It Works</a></li>
+          <li><a class="nav-link" href="#dashboard">Dashboard</a></li>
+          <li>
+   <button id="profile-btn" class="profile-btn" type="button" aria-label="User Profile">
+    👤
+</button>
+</li>
+          <li>
+    <button id="theme-toggle" type="button" aria-label="Toggle dark mode">
+        🌙
+    </button>
+</li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main">
+
+    <!-- ============ HERO ============ -->
+    <section class="hero" id="home" aria-labelledby="hero-title">
+      <div class="container hero-grid">
+        <div class="hero-copy">
+          <h1 id="hero-title">Predict Your Parking Before You Arrive</h1>
+          <p class="hero-text">
+            ParkPredict estimates how many spaces will be open when you get there.
+            It combines current occupancy with historical patterns, so you can pick
+            the right lot and leave at the right time.
+          </p>
+          <div class="hero-actions">
+            <a class="btn btn-primary" id="find-parking-btn" href="#find-parking">
+              <span class="btn-label">Find Parking</span>
+            </a>
+            <a class="btn btn-secondary" href="#dashboard">View Dashboard</a>
+          </div>
+        </div>
+
+        <!-- Parking lot illustration built with HTML + CSS only -->
+        <div class="lot-wrap">
+          <div class="lot" role="img" aria-label="Illustration of a parking lot from above with a car pulling into a free space">
+            <div class="bays bays-top">
+              <div class="bay"><span class="car car-blue"></span></div>
+              <div class="bay bay-free"></div>
+              <div class="bay"><span class="car car-yellow"></span></div>
+              <div class="bay"><span class="car car-slate"></span></div>
+              <div class="bay bay-target"></div>
+              <div class="bay"><span class="car car-red"></span></div>
+            </div>
+
+            <div class="lane"></div>
+
+            <div class="bays bays-bottom">
+              <div class="bay"><span class="car car-slate"></span></div>
+              <div class="bay"><span class="car car-red"></span></div>
+              <div class="bay bay-free"></div>
+              <div class="bay"><span class="car car-blue"></span></div>
+              <div class="bay"><span class="car car-yellow"></span></div>
+              <div class="bay bay-free"></div>
+            </div>
+
+            <span class="car car-white car-arriving"></span>
+          </div>
+
+          <div class="sign" aria-hidden="true">P</div>
+          <div class="lot-tag" aria-hidden="true">
+            <span class="lot-tag-dot"></span>
+            Space likely open on arrival
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============  ============ -->
+    <section class="section section-flush-end" id="find-parking" aria-labelledby="find-title">
+      <div class="container">
+        <div class="section-head">
+          <h2 id="find-title">Find parking</h2>
+          <p>Choose a lot to see how many spaces are open now and what to expect in 30 minutes.</p>
+        </div>
+
+    <div class="picker-panel" id="picker-panel">
+
+      <div class="lot-picker" role="group" aria-label="Choose a parking lot">
+
+            <button class="lot-chip is-active" type="button" data-lot="main-gate" aria-pressed="true">
+              <span class="lot-chip-name">Main Gate Lot</span>
+              <span class="lot-chip-meta">120 spaces</span>
+            </button>
+            <button class="lot-chip" type="button" data-lot="library-garage" aria-pressed="false">
+              <span class="lot-chip-name">Library Garage</span>
+              <span class="lot-chip-meta">200 spaces</span>
+            </button>
+            <button class="lot-chip" type="button" data-lot="sports-complex" aria-pressed="false">
+              <span class="lot-chip-name">Sports Complex Lot</span>
+              <span class="lot-chip-meta">80 spaces</span>
+            </button>
+          </div>
+        </div>
+        <p class="sr-only" id="lot-status" aria-live="polite"></p>
+      </div>
+    </section>
+
+    <!-- ============ DASHBOARD SNAPSHOT (three stat cards) ============ -->
+    <section class="section section-flush-start" id="dashboard" aria-labelledby="dashboard-title">
+      <div class="container">
+        <div class="section-head">
+          <h2 id="dashboard-title">Lot snapshot</h2>
+          <p class="snapshot-lot" id="snapshot-lot">Main Gate Lot</p>
+        </div>
+
+        <div class="stats">
+          <!-- Available Spaces -->
+          <article class="stat-card">
+            <div class="stat-icon" aria-hidden="true">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="4"/><path d="M9.5 17V7h3.5a3 3 0 0 1 0 6H9.5"/></svg>
+            </div>
+            <h3 class="stat-title">Available Spaces</h3>
+            <p class="stat-value"><span id="stat-available">42</span></p>
+            <p class="stat-sub" id="stat-available-sub">of 120 spaces are open now</p>
+          </article>
+
+          <!-- Occupancy -->
+          <article class="stat-card">
+            <div class="stat-icon" aria-hidden="true">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 17a8 8 0 1 1 16 0"/><path d="M12 17l4-5"/></svg>
+            </div>
+            <h3 class="stat-title">Occupancy</h3>
+            <p class="stat-value"><span id="stat-occupancy">65</span><span class="stat-unit">%</span></p>
+            <div class="meter" id="meter" role="progressbar" aria-label="Occupancy" aria-valuemin="0" aria-valuemax="100" aria-valuenow="65">
+              <span class="meter-fill" id="meter-fill" data-level="warn" style="--fill: 65%"></span>
+            </div>
+            <p class="stat-sub" id="stat-occupancy-sub">78 of 120 spaces are taken</p>
+          </article>
+
+          <!-- Predicted Availability -->
+          <article class="stat-card">
+            <div class="stat-icon" aria-hidden="true">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+            </div>
+            <h3 class="stat-title">Predicted Availability</h3>
+            <p class="stat-value stat-value-word is-moderate" id="stat-predicted">Moderate</p>
+            <p class="stat-sub" id="stat-predicted-sub">About 30 spaces open in 30 minutes</p>
+            <span class="trend is-filling" id="stat-trend">Filling up</span>
+          </article>
+        </div>
+
+        <p class="note">Sample data for this demo. Live occupancy and forecasts will connect in a later version.</p>
+      </div>
+    </section>
+
+    <!-- ============ HOW IT WORKS ============ -->
+    <section class="section section-white" id="how-it-works" aria-labelledby="how-title">
+      <div class="container">
+        <div class="section-head section-head-center">
+          <h2 id="how-title">How It Works</h2>
+          <p>Four quick steps from choosing a lot to parking in it.</p>
+        </div>
+
+        <ol class="steps">
+          <li class="step">
+            <span class="step-num" aria-hidden="true">1</span>
+            <h3>Choose Location</h3>
+            <p>Pick the lot or garage you plan to use from the list of parking areas.</p>
+          </li>
+          <li class="step">
+            <span class="step-num" aria-hidden="true">2</span>
+            <h3>Check Parking</h3>
+            <p>See how many spaces are open right now and how full the lot is.</p>
+          </li>
+          <li class="step">
+            <span class="step-num" aria-hidden="true">3</span>
+            <h3>Predict Availability</h3>
+            <p>ParkPredict compares current occupancy with historical patterns to estimate spaces at your arrival time.</p>
+          </li>
+          <li class="step">
+            <span class="step-num" aria-hidden="true">4</span>
+            <h3>Find Your Spot</h3>
+            <p>Head to the lot with the best odds, or leave earlier if it is filling up.</p>
+          </li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- ============ WHY PARKPREDICT ============ -->
+    <section class="section section-dark on-dark" id="why-parkpredict" aria-labelledby="why-title">
+      <div class="container why-grid">
+        <div class="why-intro">
+          <h2 id="why-title">Why ParkPredict?</h2>
+          <p>Most parking tools tell you what is happening right now. ParkPredict also looks ahead to the moment you actually arrive.</p>
+        </div>
+
+        <ul class="feature-list">
+          <li class="feature">
+            <span class="feature-icon" aria-hidden="true">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l2-6 4 12 2-6h6"/></svg>
+            </span>
+            <h3>Current occupancy</h3>
+            <p>See how full a lot is before you set off.</p>
+          </li>
+          <li class="feature">
+            <span class="feature-icon" aria-hidden="true">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 21v-7M11 21V6M16 21v-10M3 21h18"/></svg>
+            </span>
+            <h3>Historical patterns</h3>
+            <p>Past busy and quiet periods help estimate what is likely later.</p>
+          </li>
+          <li class="feature">
+            <span class="feature-icon" aria-hidden="true">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>
+            </span>
+            <h3>Arrival-time estimate</h3>
+            <p>Plan for when you will be there, not just for right now.</p>
+          </li>
+          <li class="feature">
+            <span class="feature-icon" aria-hidden="true">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="8" height="8" rx="2"/><rect x="13" y="3" width="8" height="8" rx="2"/><rect x="3" y="13" width="8" height="8" rx="2"/><rect x="13" y="13" width="8" height="8" rx="2"/></svg>
+            </span>
+            <h3>Clear at a glance</h3>
+            <p>Three numbers tell the story: spaces open, how full, and what to expect.</p>
+          </li>
+          <li class="feature">
+            <span class="feature-icon" aria-hidden="true">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="2" width="10" height="20" rx="2.5"/><path d="M11 18h2"/></svg>
+            </span>
+            <h3>Works on any screen</h3>
+            <p>Check from your phone on the way, or from a laptop before you leave.</p>
+          </li>
+          <li class="feature">
+            <span class="feature-icon" aria-hidden="true">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M9 2h6"/></svg>
+            </span>
+            <h3>Less circling</h3>
+            <p>Skip full lots and save time, fuel, and stress.</p>
+          </li>
+        </ul>
+      </div>
+    </section>
+  </main>
+  <section id="parking-location-screen" class="parking-location-screen">
+
+    <button id="back-home-btn" class="back-home-btn">
+        ← Back to Home
+    </button>
+
+    <div class="parking-location-content">
+
+        <h2>Parking Locations</h2>
+        <p>Select a parking location to view availability.</p>
+
+        <div id="big-parking-map"></div>
+
+        <div id="parking-details">
+            <h3>Select a parking location</h3>
+            <p>Click a marker on the map to see parking details.</p>
+        </div>
+
+    </div>
+
+</section>
+
+  <!-- ============ FOOTER ============ -->
+   <!-- USER PROFILE -->
+<div id="profile-modal" class="profile-modal">
+
+    <div class="profile-box">
+
+        <button id="close-profile" class="close-profile">✕</button>
+
+        <div class="profile-icon">👤</div>
+
+        <h2>User Profile</h2>
+
+        <p><strong>Name</strong></p>
+        <p>Shri Archana</p>
+
+        <p><strong>Email</strong></p>
+        <p>archanarajen@gmail.com</p>
+
+        <button id="logout-btn" class="logout-btn">
+            Logout
+        </button>
+
+    </div>
+
+</div>
+  <footer class="site-footer on-dark">
+    <div class="container footer-grid">
+      <div class="footer-brand">
+        <a class="brand" href="#home" aria-label="ParkPredict, back to top">
+          <span class="brand-mark" aria-hidden="true">P</span>
+          <span class="brand-name">ParkPredict</span>
+        </a>
+        <p>Predict your parking before you arrive.</p>
+      </div>
+
+      <nav class="footer-nav" aria-label="Footer navigation">
+        <a href="#home">Home</a>
+        <a href="#find-parking">Find Parking</a>
+        <a href="#parking-location-screen">Parking Locations</a>
+        <a href="#how-it-works">How It Works</a>
+        <a href="#dashboard">Dashboard</a>
+      </nav>
+    </div>
+
+    <div class="container footer-bottom">
+      <p>&copy; <span id="year">2026</span> ParkPredict. A college project built with Flask.</p>
+      <p>Figures shown are sample data for demonstration.</p>
+    </div>
+  </footer>
+
+ <script src="/static/scrpit.js" defer></script>
+ 
+</body>
+</html>
+

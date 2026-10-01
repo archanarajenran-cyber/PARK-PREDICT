@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ParkPredict - Login</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #f5f7fb;
+        }
+
+        .login-container {
+            width: 900px;
+            max-width: 90%;
+            min-height: 520px;
+            display: flex;
+            background: white;
+            border-radius: 24px;
+            overflow: hidden;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.12);
+        }
+
+        .login-left {
+            width: 50%;
+            background: #d62828;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 40px;
+            text-align: center;
+        }
+
+        .parking-icon {
+            font-size: 80px;
+            margin-bottom: 20px;
+        }
+
+        .login-left h1 {
+            font-size: 36px;
+            margin-bottom: 15px;
+        }
+
+        .login-left p {
+            font-size: 16px;
+            line-height: 1.6;
+        }
+
+        .login-right {
+            width: 50%;
+            padding: 55px 50px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .login-right h2 {
+            font-size: 30px;
+            color: #0e1726;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #556275;
+            margin-bottom: 30px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #0e1726;
+            font-weight: bold;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 14px;
+            border: 1px solid #e2e7f0;
+            border-radius: 10px;
+            font-size: 15px;
+            outline: none;
+        }
+
+        .input-group input:focus {
+            border-color: #d62828;
+        }
+
+        .forgot {
+            text-align: right;
+            margin-bottom: 25px;
+        }
+
+        .forgot a {
+            color: #d62828;
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        .login-btn {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 10px;
+            background: #d62828;
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .login-btn:hover {
+            background: #a61b1b;
+        }
+
+        .signup {
+            text-align: center;
+            margin-top: 25px;
+            color: #556275;
+        }
+
+        .signup a {
+            color: #d62828;
+            font-weight: bold;
+            text-decoration: none;
+        }
+
+        @media (max-width: 700px) {
+            .login-container {
+                flex-direction: column;
+            }
+
+            .login-left,
+            .login-right {
+                width: 100%;
+            }
+
+            .login-left {
+                min-height: 230px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="login-container">
+
+        <div class="login-left">
+            <div class="parking-icon">🅿️</div>
+            <h1>ParkPredict</h1>
+            <p>
+                Smart parking made simple.<br>
+                Find available parking spaces quickly.
+            </p>
+        </div>
+
+        <div class="login-right">
+
+            <h2>Welcome Back!</h2>
+            <p class="subtitle">Login to continue to ParkPredict</p>
+
+            <form onsubmit="demoLogin(event)">
+
+                <div class="input-group">
+                    <label>Email / Username</label>
+                    <input type="text" placeholder="Enter your email or username" required>
+                </div>
+
+                <div class="input-group">
+                    <label>Password</label>
+                    <input type="password" placeholder="Enter your password" required>
+                </div>
+
+                <div class="forgot">
+                    <a href="#">Forgot Password?</a>
+                </div>
+
+                <button class="login-btn" type="submit">
+                    LOGIN
+                </button>
+
+            </form>
+
+            <p class="signup">
+                Don't have an account?
+                <a href="#">Sign Up</a>
+            </p>
+
+        </div>
+
+    </div>
+
+    <script>
+        function demoLogin(event) {
+            event.preventDefault();
+
+            // Demo login only
+            window.location.href = "/home";
+        }
+    </script>
+
+</body>
+</html>
